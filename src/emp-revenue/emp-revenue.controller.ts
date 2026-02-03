@@ -13,12 +13,38 @@ import {
   CreateEmpRevenueDto,
   UpdateEmpRevenueDto,
 } from './dto/emp-revenue.dto';
+import { ApiBody, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('emp-revenue')
 export class EmpRevenueController {
   constructor(private readonly service: EmpRevenueService) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Create employee revenue',
+    description:
+      'Create a revenue record with multiple currencies and calculate total EGP amount',
+  })
+  @ApiBody({
+    type: CreateEmpRevenueDto,
+    examples: {
+      example: {
+        summary: 'Multiple currencies revenue',
+        value: {
+          activity: '65f1b2...',
+          employee: '65a9c3...',
+          currencies: [
+            { currency: 'USD_ID', amount: 100 },
+            { currency: 'EUR_ID', amount: 50 },
+          ],
+          date: '2026-01-30',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Revenue record created successfully',
+  })
   create(@Body() dto: CreateEmpRevenueDto) {
     return this.service.create(dto);
   }

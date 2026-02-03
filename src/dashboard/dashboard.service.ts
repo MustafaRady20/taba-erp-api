@@ -41,17 +41,17 @@ export class DashboardService {
       .populate('activity')
       .populate('employee');
 
-    const totalEmployeeRevenue = revenues.reduce((sum, r) => sum + r.EGPamount, 0);
+    const totalEmployeeRevenue = revenues.reduce((sum, r) => sum + r.totalEGPAmount, 0);
 
     const revenuePerActivity = revenues.reduce((acc, r: any) => {
       const name = r.activity?.name || 'غير محدد';
-      acc[name] = (acc[name] || 0) + r.EGPamount;
+      acc[name] = (acc[name] || 0) + r.totalEGPAmount;
       return acc;
     }, {} as Record<string, number>);
 
     const revenueByEmployee = revenues.reduce((acc, r: any) => {
       const emp = r.employee?.name || 'موظف غير معروف';
-      acc[emp] = (acc[emp] || 0) + r.EGPamount;
+      acc[emp] = (acc[emp] || 0) + r.totalEGPAmount;
       return acc;
     }, {} as Record<string, number>);
 

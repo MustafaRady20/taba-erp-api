@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { EmpRevenue, EmpRevenueDocument } from 'src/emp-revenue/schema/revenue.schema';
-import { Employees, EmployeesDocument } from 'src/employees/schema/employee.schema';
+import {
+  EmpRevenue,
+  EmpRevenueDocument,
+} from 'src/emp-revenue/schema/revenue.schema';
+import {
+  Employees,
+  EmployeesDocument,
+} from 'src/employees/schema/employee.schema';
 
 @Injectable()
 export class SalaryService {
@@ -15,11 +21,12 @@ export class SalaryService {
   ) {}
 
   async calculateSalaries() {
-
     /** Fetch all employees */
     const employees = await this.employeeModel.find();
 
-    const variableEmployeesCount = employees.filter(e => e.type === 'variable').length;
+    const variableEmployeesCount = employees.filter(
+      (e) => e.type === 'variable',
+    ).length;
 
     /** Aggregate all revenues grouped by activity type */
     const revenues = await this.revenueModel.aggregate([
@@ -31,28 +38,44 @@ export class SalaryService {
           as: 'activity',
         },
       },
-      { $unwind: '$activity' }
+      { $unwind: '$activity' },
     ]);
 
     const totalBagging = revenues
-      .filter(r => r.activity.name === 'حمل حقائب')
-      .reduce((sum, r) => sum + r.EGPamount, 0);
+      .filter((r) => r.activity?.name === 'حمل حقائب')
+      .reduce((sum, r) => {
+        const total =
+          typeof r.totalEGPAmount === 'number'
+            ? r.totalEGPAmount
+            : Array.isArray(r.currencies)
+              ? r.currencies.reduce(
+                  (s, c) =>
+                    s + (Number(c.amount) * Number(c.exchangeRate) || 0),
+                  0,
+                )
+              : 0;
+
+        return sum + total;
+      }, 0);
 
     const totalCleaning = revenues
-      .filter(r => r.activity.name === 'نظافة')
-      .reduce((sum, r) => sum + r.EGPamount, 0);
+      .filter((r) => r.activity.name === 'نظافة')
+      .reduce((sum, r) => sum + r.totalEGPAmount, 0);
 
-    const variableSalary = variableEmployeesCount > 0
-      ? (totalCleaning + totalBagging / 3) / variableEmployeesCount
-      : 0;
+    const variableSalary =
+      variableEmployeesCount > 0
+        ? (totalCleaning + totalBagging / 3) / variableEmployeesCount
+        : 0;
 
-    return employees.map(employee => ({
+    console.log(totalBagging);
+    return employees.map((employee) => ({
       employeeId: employee._id,
       name: employee.name,
       type: employee.type,
-      salary: employee.type === 'fixed'
-        ? employee.fixedSalary ?? 0
-        : Number(variableSalary.toFixed(2)) // تنسيق أفضل
+      salary:
+        employee.type === 'fixed'
+          ? (employee.fixedSalary ?? 0)
+          : Number(variableSalary.toFixed(2)) || 0, // تنسيق أفضل
     }));
   }
 }
