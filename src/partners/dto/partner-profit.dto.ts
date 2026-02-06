@@ -11,8 +11,8 @@ export class CreatePartnerProfitDto {
   profit: number;
 
   @IsOptional()
-  @IsDateString()
-  date?: Date;
+  @IsNumber()
+  month?: number;
 }
 
 
@@ -30,7 +30,7 @@ export class UpdatePartnerProfitDto {
   profit?: number;
 
   @IsOptional()
-  @IsDateString()
-  date?: Date;
+  @IsNumber()
+  month?: number;
 }
 
