@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { IsMongoId, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateRevenueDto {
@@ -18,3 +18,6 @@ export class CreateRevenueDto {
   @IsNumber()
   amount: number;
 }
+
+
+export class UpdateRevenueDto extends PartialType(CreateRevenueDto){}

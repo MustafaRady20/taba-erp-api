@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Param } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Patch } from "@nestjs/common";
 import { CafeRevenueService } from "./cafe-revenue.service";
-import { CreateRevenueDto } from "./dto/create-revenue.dto";
+import { CreateRevenueDto, UpdateRevenueDto } from "./dto/create-revenue.dto";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 
 @ApiTags("Cafe Revenue")
@@ -20,6 +20,11 @@ export class CafeRevenueController {
     return this.revenueService.findAll();
   }
 
+
+  @Patch(":id")
+  update(@Param("id") id:string,@Body() dto:UpdateRevenueDto){
+    return this.revenueService.update(id,dto)
+  }
   @Get("daily/:cafeId/:date")
   @ApiOperation({ summary: "Get daily revenue" })
   getDaily(

@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { CreateRevenueDto } from "./dto/create-revenue.dto";
+import { CreateRevenueDto, UpdateRevenueDto } from "./dto/create-revenue.dto";
 import { CafeRevenue, CafeRevenueDocument } from "./schema/cafe-revenue.schema";
 
 @Injectable()
@@ -27,6 +27,13 @@ export class CafeRevenueService {
       .exec();
   }
 
+  async update(id:string,dto:UpdateRevenueDto){
+    const updatedData = await this.revenueModel.findByIdAndUpdate(new Types.ObjectId(id),dto,{new:true})
+    if(!updatedData){
+      throw new HttpException("can't be updated",400)
+    }
+    return updatedData
+  }
   // DAILY REVENUE
 async getDailyRevenue(cafeId: string, date: string) {
   const target = new Date(date);
