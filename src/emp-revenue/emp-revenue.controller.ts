@@ -60,11 +60,13 @@ export class EmpRevenueController {
     @Query('year') year?: string,
     @Query('month') month?: string,
     @Query('date') date?: string,
+      @Query('currency') currency?: string,
+        @Query('activity') activity?: string,
   ) {
     const parsedYear = year ? parseInt(year, 10) : undefined;
     const parsedMonth = month ? parseInt(month, 10) : undefined;
 
-    return this.service.report(period, parsedYear, parsedMonth, date);
+    return this.service.report(period, parsedYear, parsedMonth, date,activity,currency);
   }
 
   @Get('employee/:id')
