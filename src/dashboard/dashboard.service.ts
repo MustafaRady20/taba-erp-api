@@ -113,17 +113,9 @@ export class DashboardService {
     const totalReservations = reservations.length;
     const totalGuests = reservations.reduce((sum, r) => sum + 1 + r.numberOfCompanions, 0);
 
-    // Reservations by country
-    const reservationsByCountry = reservations.reduce((acc, r) => {
-      acc[r.country] = (acc[r.country] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    
 
-    // Top countries
-    const topCountries = Object.entries(reservationsByCountry)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([country, count]) => ({ country, count }));
+  
 
     // Reservations by gender (if available)
     const reservationsByGender = reservations.reduce((acc, r) => {
@@ -208,7 +200,7 @@ export class DashboardService {
         totalReservations,
         totalGuests,
         averageAge: parseFloat(avgAge.toFixed(1)),
-        topCountries,
+        
         reservationsByGender: Object.entries(reservationsByGender).map(([gender, count]) => ({
           gender,
           count,
