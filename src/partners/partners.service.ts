@@ -71,7 +71,7 @@ export class PartnerService {
 
   findPartnerProfits(partnerId: string) {
     return this.partnerProfitModel
-      .find({ partner: partnerId })
+      .find({ partner: new Types.ObjectId(partnerId) })
       .populate('activity');
   }
 

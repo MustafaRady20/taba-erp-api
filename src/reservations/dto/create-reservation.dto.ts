@@ -27,14 +27,7 @@ export class CreateReservationDto {
   @IsString()
   phone: string;
 
-  @ApiProperty({ example: 'john@example.com', required: false })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
 
-  @ApiProperty({ example: 'Egypt' })
-  @IsString()
-  country: string;
 
   @ApiProperty({ example: 2 })
   @IsNumber()
@@ -49,15 +42,7 @@ export class CreateReservationDto {
   @IsString()
   expectedArrivalTime: string;
 
-  @ApiProperty({ example: '2025-11-05', required: false })
-  @IsOptional()
-  @IsDateString()
-  expectedDepartureDate?: string;
 
-  @ApiProperty({ example: 'Vacation', required: false })
-  @IsOptional()
-  @IsString()
-  purposeOfVisit?: string;
 
   @ApiProperty({ example: 'Car', required: false })
   @IsOptional()

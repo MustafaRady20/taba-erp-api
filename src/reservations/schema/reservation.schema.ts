@@ -17,14 +17,10 @@ export class Reservation {
   @Prop({ required: true })
   phone: string;
 
-  @Prop()
-  email?: string;
 
   @Prop()
   gender?: string;
 
-  @Prop({ required: true })
-  country: string;
 
   @Prop({ required: true, min: 0 })
   numberOfCompanions: number;
@@ -36,11 +32,7 @@ export class Reservation {
   @Prop({ required: true })
   expectedArrivalTime: string; // e.g. "14:00"
 
-  @Prop()
-  expectedDepartureDate?: Date;
 
-  @Prop()
-  purposeOfVisit?: string; // e.g. "Vacation", "Business", etc.
 
   @Prop()
   transportationMode?: string; // e.g. "Car", "Flight", "Bus"
