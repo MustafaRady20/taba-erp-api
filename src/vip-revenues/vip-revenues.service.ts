@@ -89,15 +89,46 @@ export class VipRevenuesService {
   }
 
   async update(id: string, dto: UpdateVipRevenueDto): Promise<VipRevenue> {
-    const revenue = await this.vipRevenueModel.findByIdAndUpdate(id, dto, {
-      new: true,
-    });
+
+    const currencies: RevenueCurrency[] = [];
+    let amount = 0;
+
+    if(!dto.currencies){
+      throw new Error(' currencies is must');
+    }
+    for (const item of dto.currencies) {
+      const currency = await this.currencyModel.findById(item.currency);
+     
+      if (!currency) {
+        throw new NotFoundException(`Currency not found: ${item.currency}`);
+      }
+
+      const egpAmount =
+        item.amount * item.exchangeRate || currency.exchangeRate;
+      amount += egpAmount;
+
+      currencies.push({
+        currency: new Types.ObjectId(item.currency),
+        amount: item.amount,
+        exchangeRate: item.exchangeRate || currency.exchangeRate,
+        egpAmount,
+      });
+    }
+    
+    const revenue = await this.vipRevenueModel.findByIdAndUpdate(id,{
+      employee: new Types.ObjectId(dto.employee),
+      currencies,
+      amount,
+      date: dto.date ?? new Date(),
+    },{new :true});
 
     if (!revenue) {
       throw new NotFoundException('VIP Revenue not found');
     }
 
     return revenue;
+  
+    
   }
 
   async remove(id: string): Promise<void> {
