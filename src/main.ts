@@ -9,6 +9,7 @@ async function bootstrap() {
     origin:[
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://localhost:3002",
       "https://elmahdy-pied.vercel.app/",
       "http://tabavip.com",
       "https://www.tabavip.com",

@@ -43,7 +43,7 @@ async getDailyRevenue(cafeId: string, date: string) {
     {
       $match: {
         cafeId: cafeId,
-        createdAt: {
+        date: {
           $gte: startOfDay(target),
           $lte: endOfDay(target),
         },
@@ -68,7 +68,7 @@ async getWeeklyRevenue(cafeId: string) {
     {
       $match: {
         cafeId: cafeId,
-        createdAt: { $gte: start, $lte: today },
+        date: { $gte: start, $lte: today },
       },
     },
     {
@@ -82,14 +82,16 @@ async getWeeklyRevenue(cafeId: string) {
 
 
 async getMonthlyRevenue(cafeId: string) {
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  const now = new Date();
+
+  const startOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+  const endOfMonth = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
 
   return this.revenueModel.aggregate([
     {
       $match: {
         cafeId: cafeId,
-        createdAt: { $gte: start, $lte: today },
+        date: { $gte: startOfMonth, $lt: endOfMonth },
       },
     },
     {
@@ -110,7 +112,7 @@ async getYearlyRevenue(cafeId: string) {
     {
       $match: {
         cafeId: cafeId,
-        createdAt: { $gte: start, $lte: today },
+        date: { $gte: start, $lte: today },
       },
     },
     {

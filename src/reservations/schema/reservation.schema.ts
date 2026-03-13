@@ -18,10 +18,6 @@ export class Reservation {
   phone: string;
 
 
-  @Prop()
-  gender?: string;
-
-
   @Prop({ required: true, min: 0 })
   numberOfCompanions: number;
 
@@ -30,12 +26,13 @@ export class Reservation {
   expectedArrivalDate: Date;
 
   @Prop({ required: true })
-  expectedArrivalTime: string; // e.g. "14:00"
-
-
+  expectedArrivalTime: string; // e.g. "14:00 PM"
 
   @Prop()
-  transportationMode?: string; // e.g. "Car", "Flight", "Bus"
+  directionOfTravel?: string;
+
+  @Prop({type: Types.ObjectId, ref: 'Package'})
+  package?: Types.ObjectId;
 
   @Prop()
   notes?: string;

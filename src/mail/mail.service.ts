@@ -87,9 +87,9 @@ async sendNewReservationNotification(
         </tr>
 
         <tr>
-          <td style="padding:8px; border:1px solid #ddd">تاريخ المغادرة</td>
+          <td style="padding:8px; border:1px solid #ddd">اتجاه العبور</td>
           <td style="padding:8px; border:1px solid #ddd">
-            ${this.formatDateEG(reservation.expectedDepartureDate)}
+            ${this.formatDateEG(reservation.directionOfTravel)}
           </td>
         </tr>
 
@@ -97,6 +97,20 @@ async sendNewReservationNotification(
           <td style="padding:8px; border:1px solid #ddd">عدد الأفراد</td>
           <td style="padding:8px; border:1px solid #ddd">
             ${reservation.numberOfCompanions}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:8px; border:1px solid #ddd">الباقة</td>
+          <td style="padding:8px; border:1px solid #ddd">
+            ${reservation.package?.ar?.name}
+          </td>
+        </tr>
+
+          <tr>
+          <td style="padding:8px; border:1px solid #ddd">ااجمالي السعر</td>
+          <td style="padding:8px; border:1px solid #ddd">
+            ${reservation.package?.price * reservation.numberOfCompanions} $
           </td>
         </tr>
 
@@ -140,7 +154,7 @@ async sendNewReservationNotification(
 }
 
 private formatDateEG(date: Date | string) {
-  return new Date(date).toLocaleString('ar-EG', {
+  return new Date().toLocaleString('ar-EG', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

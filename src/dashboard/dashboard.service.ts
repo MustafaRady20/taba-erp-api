@@ -118,12 +118,7 @@ export class DashboardService {
   
 
     // Reservations by gender (if available)
-    const reservationsByGender = reservations.reduce((acc, r) => {
-      if (r.gender) {
-        acc[r.gender] = (acc[r.gender] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>);
+  
 
     // Average age
     const avgAge = reservations.length > 0
@@ -201,10 +196,7 @@ export class DashboardService {
         totalGuests,
         averageAge: parseFloat(avgAge.toFixed(1)),
         
-        reservationsByGender: Object.entries(reservationsByGender).map(([gender, count]) => ({
-          gender,
-          count,
-        })),
+        
       },
     };
   }

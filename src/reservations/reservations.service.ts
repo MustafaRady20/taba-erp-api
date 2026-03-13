@@ -24,9 +24,10 @@ export class ReservationService {
     //   reservation.phone,
     //   reservation
     // );
+    const populatedReservation = await this.reservationModel.findById(reservation._id).populate('package');
 
-    await this.emailService.sendNewReservationNotification(reservation)
-    return reservation;
+    await this.emailService.sendNewReservationNotification(populatedReservation)
+    return populatedReservation;
   }
 
   async findAll(filters: {

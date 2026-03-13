@@ -18,10 +18,7 @@ export class CreateReservationDto {
   @Min(1)
   age: number;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  gender?: string;
+
 
   @ApiProperty({ example: '+201234567890' })
   @IsString()
@@ -44,10 +41,16 @@ export class CreateReservationDto {
 
 
 
-  @ApiProperty({ example: 'Car', required: false })
   @IsOptional()
   @IsString()
-  transportationMode?: string;
+  directionOfTravel?: string;
+
+
+
+  @IsOptional()
+  @IsString()
+  package?: string;
+
 
   @ApiProperty({ example: 'VIP guest, prefers sea view', required: false })
   @IsOptional()
