@@ -27,6 +27,7 @@ export class ReservationService {
     const populatedReservation = await this.reservationModel.findById(reservation._id).populate('package');
 
     await this.emailService.sendNewReservationNotification(populatedReservation)
+
     return populatedReservation;
   }
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { ReservationDocument } from 'src/reservations/schema/reservation.schema';
 
 @Injectable()
 export class MailService {
@@ -82,7 +83,7 @@ async sendNewReservationNotification(
         <tr>
           <td style="padding:8px; border:1px solid #ddd">تاريخ الوصول</td>
           <td style="padding:8px; border:1px solid #ddd">
-            ${this.formatDateEG(reservation.expectedArrivalDate)}
+            ${this.formatDateEG(reservation.expectedArrivalDate)} - ${this.fixTimeFormat(reservation.expectedArrivalTime)}
           </td>
         </tr>
 
@@ -144,6 +145,7 @@ async sendNewReservationNotification(
       html,
     });
 
+
     this.logger.log(`📧 New reservation notification sent`);
   } catch (error) {
     this.logger.error(
@@ -160,11 +162,23 @@ private formatDateEG(date: Date | string) {
     return 'تاريخ غير صالح';
   }
 
-  return d.toLocaleString('ar-EG', {
+  return d.toLocaleString('en-GB', {
     timeZone: 'Africa/Cairo',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    hour12: true,
+  });
+}
+
+private fixTimeFormat(time: string) {
+  const [hourMin] = time.split(' '); // ناخد 15:00 بس
+  const [hour, minute] = hourMin.split(':').map(Number);
+
+  const date = new Date();
+  date.setHours(hour, minute);
+
+  return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
