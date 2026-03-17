@@ -154,7 +154,14 @@ async sendNewReservationNotification(
 }
 
 private formatDateEG(date: Date | string) {
-  return new Date(date).toLocaleString('ar-EG', {
+  const d = new Date(date);
+
+  if (isNaN(d.getTime())) {
+    return 'تاريخ غير صالح';
+  }
+
+  return d.toLocaleString('ar-EG', {
+    timeZone: 'Africa/Cairo',
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -163,6 +170,4 @@ private formatDateEG(date: Date | string) {
     hour12: true,
   });
 }
-
-
 }
