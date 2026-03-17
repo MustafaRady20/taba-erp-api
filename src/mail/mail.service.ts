@@ -89,7 +89,7 @@ async sendNewReservationNotification(
         <tr>
           <td style="padding:8px; border:1px solid #ddd">اتجاه العبور</td>
           <td style="padding:8px; border:1px solid #ddd">
-            ${this.formatDateEG(reservation.directionOfTravel)}
+            ${reservation.directionOfTravel}
           </td>
         </tr>
 
@@ -154,7 +154,7 @@ async sendNewReservationNotification(
 }
 
 private formatDateEG(date: Date | string) {
-  return new Date().toLocaleString('ar-EG', {
+  return new Date(date).toLocaleString('ar-EG', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
