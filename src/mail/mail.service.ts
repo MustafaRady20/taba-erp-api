@@ -83,7 +83,7 @@ async sendNewReservationNotification(
         <tr>
           <td style="padding:8px; border:1px solid #ddd">تاريخ الوصول</td>
           <td style="padding:8px; border:1px solid #ddd">
-            ${this.formatDateEG(reservation.expectedArrivalDate)} - ${this.fixTimeFormat(reservation.expectedArrivalTime)}
+            ${this.formatDateEG(reservation.expectedArrivalDate)} - ${reservation.expectedArrivalTime}
           </td>
         </tr>
 
