@@ -41,7 +41,9 @@ export class ReservationService {
         totalCost = basePrice;
       }
     }
-    const reservation = await this.reservationModel.create({ ...dto, package: new Types.ObjectId(dto.package), totalCost });
+
+    const arrivalTime = await this.emailService.fixTimeFormat(dto.expectedArrivalTime);
+    const reservation = await this.reservationModel.create({ ...dto, package: new Types.ObjectId(dto.package), totalCost, expectedArrivalTime: arrivalTime });
     // console.log(reservation)
     // await this.whatsappService.sendReservationConfirmation(
     //   reservation.phone,

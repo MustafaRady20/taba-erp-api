@@ -171,7 +171,7 @@ private formatDateEG(date: Date | string) {
   });
 }
 
-private fixTimeFormat(time: string) {
+async fixTimeFormat(time: string) {
   const [hourMin] = time.split(' '); // ناخد 15:00 بس
   const [hour, minute] = hourMin.split(':').map(Number);
 
