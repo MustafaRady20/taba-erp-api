@@ -31,11 +31,14 @@ export class Reservation {
   @Prop()
   directionOfTravel?: string;
 
-  @Prop({type: Types.ObjectId, ref: 'Package'})
+  @Prop({ type: Types.ObjectId, ref: 'Package' })
   package?: Types.ObjectId;
 
   @Prop()
   notes?: string;
+
+  @Prop()
+  totalCost?: number;
 }
 
 export const ReservationSchema = SchemaFactory.createForClass(Reservation);

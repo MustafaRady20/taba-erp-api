@@ -5,11 +5,13 @@ import { ReservationController } from './reservations.controller';
 import { ReservationService } from './reservations.service';
 import { WhatsappModule } from 'src/whatsapp/whatsapp.module';
 import { MailModule } from 'src/mail/mail.module';
+import { Package, PackageSchema } from 'src/tarvelpackages/schema/package.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Reservation.name, schema: ReservationSchema },
+      { name: Package.name, schema: PackageSchema }
     ]),
     WhatsappModule,
     MailModule

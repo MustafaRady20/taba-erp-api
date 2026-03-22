@@ -111,7 +111,7 @@ async sendNewReservationNotification(
           <tr>
           <td style="padding:8px; border:1px solid #ddd">ااجمالي السعر</td>
           <td style="padding:8px; border:1px solid #ddd">
-            ${reservation.package?.price * reservation.numberOfCompanions} $
+            ${reservation.totalCost} شيكل
           </td>
         </tr>
 

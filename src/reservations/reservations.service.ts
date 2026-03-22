@@ -6,6 +6,7 @@ import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { Reservation, ReservationDocument } from './schema/reservation.schema';
 import { WhatsappService } from 'src/whatsapp/whatsapp.service';
 import { MailService } from 'src/mail/mail.service';
+import { Package } from 'src/tarvelpackages/schema/package.schema';
 
 @Injectable()
 export class ReservationService {
@@ -13,12 +14,34 @@ export class ReservationService {
   constructor(
     @InjectModel(Reservation.name)
     private reservationModel: Model<ReservationDocument>,
+    @InjectModel(Package.name)
+    private packageModel: Model<Package>,
     private whatsappService: WhatsappService,
     private emailService: MailService
   ) { }
 
   async create(dto: CreateReservationDto) {
-    const reservation = await this.reservationModel.create({ ...dto, package: new Types.ObjectId(dto.package) });
+
+    const now = new Date();
+    const arrival = new Date(dto.expectedArrivalDate);
+
+    // @ts-ignore
+    const diffInDays = (arrival - now) / (1000 * 60 * 60 * 24);
+
+    let totalCost = 0;
+
+
+    const selectedPkg = await this.packageModel.findById(dto.package);
+    if (selectedPkg) {
+      const basePrice = selectedPkg.price * dto.numberOfCompanions;
+
+      if (diffInDays >= 5) {
+        totalCost = basePrice * 0.9;
+      } else {
+        totalCost = basePrice;
+      }
+    }
+    const reservation = await this.reservationModel.create({ ...dto, package: new Types.ObjectId(dto.package), totalCost });
     // console.log(reservation)
     // await this.whatsappService.sendReservationConfirmation(
     //   reservation.phone,
@@ -26,6 +49,7 @@ export class ReservationService {
     // );
     const populatedReservation = await this.reservationModel.findById(reservation._id).populate('package');
 
+    // console.log(reservation)
     await this.emailService.sendNewReservationNotification(populatedReservation)
 
     return populatedReservation;
