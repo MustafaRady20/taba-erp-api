@@ -10,7 +10,7 @@ import {
 import { CreatePackageDto, UpdatePackageDto } from './dto/package.dto';
 import { TarvelpackagesService } from './tarvelpackages.service';
 
-@Controller('packages')
+@Controller('tarvelpackages')
 export class TarvelpackagesController {
   constructor(private readonly packagesService: TarvelpackagesService) {}
 
