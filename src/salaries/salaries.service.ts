@@ -20,62 +20,73 @@ export class SalaryService {
     private readonly employeeModel: Model<EmployeesDocument>,
   ) {}
 
-  async calculateSalaries() {
-    /** Fetch all employees */
-    const employees = await this.employeeModel.find();
+async calculateSalaries(dto?: { startDate?: string; endDate?: string }) {
+  const startDate = dto?.startDate
+    ? new Date(dto.startDate)
+    : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-    const variableEmployeesCount = employees.filter(
-      (e) => e.type === 'variable',
-    ).length;
+  const endDate = dto?.endDate
+    ? new Date(dto.endDate)
+    : new Date();
 
-    /** Aggregate all revenues grouped by activity type */
-    const revenues = await this.revenueModel.aggregate([
-      {
-        $lookup: {
-          from: 'activities',
-          localField: 'activity',
-          foreignField: '_id',
-          as: 'activity',
+  endDate.setHours(23, 59, 59, 999);
+
+  const employees = await this.employeeModel.find();
+
+  const variableEmployeesCount = employees.filter(
+    (e) => e.type === 'variable',
+  ).length;
+
+  const revenues = await this.revenueModel.aggregate([
+    {
+      $match: {
+        date: {
+          $gte: startDate,
+          $lte: endDate,
         },
       },
-      { $unwind: '$activity' },
-    ]);
+    },
+    {
+      $lookup: {
+        from: 'activities',
+        localField: 'activity',
+        foreignField: '_id',
+        as: 'activity',
+      },
+    },
+    { $unwind: '$activity' },
+  ]);
 
-    const totalBagging = revenues
-      .filter((r) => r.activity?.name === 'حمل حقائب')
-      .reduce((sum, r) => {
-        const total =
-          typeof r.totalEGPAmount === 'number'
-            ? r.totalEGPAmount
-            : Array.isArray(r.currencies)
-              ? r.currencies.reduce(
-                  (s, c) =>
-                    s + (Number(c.amount) * Number(c.exchangeRate) || 0),
-                  0,
-                )
-              : 0;
+  const totalBagging = revenues
+    .filter((r) => r.activity?.name === 'الحقائب')
+    .reduce((sum, r) => {
+      const total =
+        typeof r.totalEGPAmount === 'number'
+          ? r.totalEGPAmount
+          : Array.isArray(r.currencies)
+          ? r.currencies.reduce(
+              (s, c) =>
+                s + (Number(c.amount) * Number(c.exchangeRate) || 0),
+              0,
+            )
+          : 0;
 
-        return sum + total;
-      }, 0);
+      return sum + total;
+    }, 0);
 
-    const totalCleaning = revenues
-      .filter((r) => r.activity.name === 'نظافة')
-      .reduce((sum, r) => sum + r.totalEGPAmount, 0);
+  const variableSalary =
+    variableEmployeesCount > 0
+      ? totalBagging / 3 / variableEmployeesCount
+      : 0;
 
-    const variableSalary =
-      variableEmployeesCount > 0
-        ? (totalCleaning + totalBagging / 3) / variableEmployeesCount
-        : 0;
-
-    console.log(totalBagging);
-    return employees.map((employee) => ({
-      employeeId: employee._id,
-      name: employee.name,
-      type: employee.type,
-      salary:
-        employee.type === 'fixed'
-          ? (employee.fixedSalary ?? 0)
-          : Number(variableSalary.toFixed(2)) || 0, // تنسيق أفضل
-    }));
-  }
+  return employees.map((employee) => ({
+    employeeId: employee._id,
+    name: employee.name,
+    type: employee.type,
+    salary:
+      employee.type === 'fixed'
+        ? employee.fixedSalary ?? 0
+        : Number(variableSalary.toFixed(2)) || 0,
+  }));
+}
 }

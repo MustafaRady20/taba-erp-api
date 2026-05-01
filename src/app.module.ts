@@ -25,6 +25,7 @@ import { VipRevenuesModule } from './vip-revenues/vip-revenues.module';
 import { CurrencyModule } from './currency/currency.module';
 import { PartnersModule } from './partners/partners.module';
 import { TarvelpackagesModule } from './tarvelpackages/tarvelpackages.module';
+import { CommissionModule } from './commission/commission.module';
 
 @Module({
   imports: [
@@ -60,7 +61,8 @@ import { TarvelpackagesModule } from './tarvelpackages/tarvelpackages.module';
     VipRevenuesModule,
     CurrencyModule,
     PartnersModule,
-    TarvelpackagesModule
+    TarvelpackagesModule,
+    CommissionModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -14,6 +14,10 @@ import {
   Currency,
   CurrencyDocument,
 } from 'src/currency/shcema/currency.schema';
+import { CreateCommissionDto } from 'src/commission/dto/commission.dto';
+import { Commission, CommissionDocument } from 'src/commission/schemas/commission.schema';
+import { CommissionService } from 'src/commission/commission.service';
+import { Activity, ActivityDocument } from 'src/activity/schema/activity.schema';
 
 @Injectable()
 export class EmpRevenueService {
@@ -23,40 +27,68 @@ export class EmpRevenueService {
 
     @InjectModel(Currency.name)
     private readonly currencyModel: Model<CurrencyDocument>,
+
+  @InjectModel(Activity.name)
+    private readonly activityModel: Model<ActivityDocument>,
+    
+    private readonly CommissionService: CommissionService,
   ) {}
 
   // ---------- CREATE ----------
   async create(dto: CreateEmpRevenueDto) {
-    const currencies: RevenueCurrency[] = [];
-    let totalEGPAmount = 0;
+  const currencies: RevenueCurrency[] = [];
+  let totalEGPAmount = 0;
 
-    for (const item of dto.currencies) {
-      const currency = await this.currencyModel.findById(item.currency);
-      console.log(item);
-      if (!currency) {
-        throw new NotFoundException(`Currency not found: ${item.currency}`);
-      }
+  const activity = await this.activityModel.findById(dto.activity);
+  if (!activity) {
+    throw new NotFoundException("activity not found");
+  }
 
-      const egpAmount =
-        item.amount * item.exchangeRate || currency.exchangeRate;
-      totalEGPAmount += egpAmount;
+  for (const item of dto.currencies) {
+    const currency = await this.currencyModel.findById(item.currency);
 
-      currencies.push({
-        currency: new Types.ObjectId(item.currency),
-        amount: item.amount,
-        exchangeRate: item.exchangeRate || currency.exchangeRate,
-        egpAmount,
-      });
+    if (!currency) {
+      throw new NotFoundException(`Currency not found: ${item.currency}`);
     }
 
-    return this.model.create({
-      activity: new Types.ObjectId(dto.activity),
-      employee: new Types.ObjectId(dto.employee),
-      currencies,
-      totalEGPAmount,
-      date: dto.date ?? new Date(),
+    const rate = item.exchangeRate || currency.exchangeRate;
+    const egpAmount = item.amount * rate;
+
+    totalEGPAmount += egpAmount;
+
+    currencies.push({
+      currency: new Types.ObjectId(item.currency),
+      amount: item.amount,
+      exchangeRate: rate,
+      egpAmount,
     });
   }
+
+  let empCommission = 0;
+  let amountAfterCommission = totalEGPAmount;
+
+  if (activity.name === "الحقائب") {
+    empCommission = totalEGPAmount * 0.1;
+    amountAfterCommission = totalEGPAmount - empCommission;
+  }
+
+  const empRev = await this.model.create({
+    activity: new Types.ObjectId(dto.activity),
+    employee: new Types.ObjectId(dto.employee),
+    currencies,
+    totalEGPAmount: amountAfterCommission,
+    date: dto.date ?? new Date(),
+  });
+
+  await this.CommissionService.create({
+    amount: empCommission,
+    userId: empRev.employee.toString(),
+    date: empRev.date,
+  });
+
+  return empRev;
+}
+
 
   // ---------- FIND ALL ----------
   async findAll() {
