@@ -17,7 +17,7 @@ import { ApiBody, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('emp-revenue')
 export class EmpRevenueController {
-  constructor(private readonly service: EmpRevenueService) {}
+  constructor(private readonly service: EmpRevenueService) { }
 
   @Post()
   @ApiOperation({
@@ -50,8 +50,10 @@ export class EmpRevenueController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query('month') month?: string,
+    @Query('year') year?: string,) {
+    return this.service.findAll(month ? Number(month) : undefined,
+      year ? Number(year) : undefined,);
   }
 
   @Get('report')
@@ -60,13 +62,13 @@ export class EmpRevenueController {
     @Query('year') year?: string,
     @Query('month') month?: string,
     @Query('date') date?: string,
-      @Query('currency') currency?: string,
-        @Query('activity') activity?: string,
+    @Query('currency') currency?: string,
+    @Query('activity') activity?: string,
   ) {
     const parsedYear = year ? parseInt(year, 10) : undefined;
     const parsedMonth = month ? parseInt(month, 10) : undefined;
 
-    return this.service.report(period, parsedYear, parsedMonth, date,activity,currency);
+    return this.service.report(period, parsedYear, parsedMonth, date, activity, currency);
   }
 
   @Get('employee/:id')

@@ -30,7 +30,7 @@ export class EmpRevenueService {
 
   @InjectModel(Activity.name)
     private readonly activityModel: Model<ActivityDocument>,
-    
+
     private readonly CommissionService: CommissionService,
   ) {}
 
@@ -91,9 +91,26 @@ export class EmpRevenueService {
 
 
   // ---------- FIND ALL ----------
-  async findAll() {
+  async findAll(month?: number, year?: number) {
+      const filter: any = {};
+
+  if (month || year) {
+    const now = new Date();
+
+    const targetYear = year || now.getFullYear();
+    const targetMonth = month ? month - 1 : now.getMonth();
+
+    const start = new Date(targetYear, targetMonth, 1);
+    const end = new Date(targetYear, targetMonth + 1, 1);
+
+    filter.date = {
+      $gte: start,
+      $lt: end,
+    };
+  }
     return this.model
-      .find()
+      .find(filter)
+      .sort({ createdAt: -1 })
       .populate('activity')
       .populate('employee')
       .populate('currencies.currency')

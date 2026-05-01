@@ -18,10 +18,28 @@ export class CommissionService {
     return created.save();
   }
 
-  async findAll(): Promise<Commission[]> {
-    return this.commissionModel.find().sort({ createdAt: -1 });
+ async findAll(month?: number, year?: number): Promise<Commission[]> {
+  const filter: any = {};
+
+  if (month || year) {
+    const now = new Date();
+
+    const targetYear = year || now.getFullYear();
+    const targetMonth = month ? month - 1 : now.getMonth();
+
+    const start = new Date(targetYear, targetMonth, 1);
+    const end = new Date(targetYear, targetMonth + 1, 1);
+
+    filter.date = {
+      $gte: start,
+      $lt: end,
+    };
   }
 
+  return this.commissionModel
+    .find(filter)
+    .sort({ createdAt: -1 });
+}
   async getMonthlyTotalPerUser(
   userId: string,
   month?: number, 
