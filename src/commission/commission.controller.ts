@@ -35,7 +35,7 @@ export class CommissionController {
     }
 
     @Get()
-    @ApiOperation({ summary: 'Get all commissions' })
+    @ApiOperation({ summary: 'Get all commission' })
     findAll() {
         return this.service.findAll();
     }
