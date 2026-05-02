@@ -28,86 +28,86 @@ export class EmpRevenueService {
     @InjectModel(Currency.name)
     private readonly currencyModel: Model<CurrencyDocument>,
 
-  @InjectModel(Activity.name)
+    @InjectModel(Activity.name)
     private readonly activityModel: Model<ActivityDocument>,
 
     private readonly CommissionService: CommissionService,
-  ) {}
+  ) { }
 
   // ---------- CREATE ----------
   async create(dto: CreateEmpRevenueDto) {
-  const currencies: RevenueCurrency[] = [];
-  let totalEGPAmount = 0;
+    const currencies: RevenueCurrency[] = [];
+    let totalEGPAmount = 0;
 
-  const activity = await this.activityModel.findById(dto.activity);
-  if (!activity) {
-    throw new NotFoundException("activity not found");
-  }
-
-  for (const item of dto.currencies) {
-    const currency = await this.currencyModel.findById(item.currency);
-
-    if (!currency) {
-      throw new NotFoundException(`Currency not found: ${item.currency}`);
+    const activity = await this.activityModel.findById(dto.activity);
+    if (!activity) {
+      throw new NotFoundException("activity not found");
     }
 
-    const rate = item.exchangeRate || currency.exchangeRate;
-    const egpAmount = item.amount * rate;
+    for (const item of dto.currencies) {
+      const currency = await this.currencyModel.findById(item.currency);
 
-    totalEGPAmount += egpAmount;
+      if (!currency) {
+        throw new NotFoundException(`Currency not found: ${item.currency}`);
+      }
 
-    currencies.push({
-      currency: new Types.ObjectId(item.currency),
-      amount: item.amount,
-      exchangeRate: rate,
-      egpAmount,
+      const rate = item.exchangeRate || currency.exchangeRate;
+      const egpAmount = item.amount * rate;
+
+      totalEGPAmount += egpAmount;
+
+      currencies.push({
+        currency: new Types.ObjectId(item.currency),
+        amount: item.amount,
+        exchangeRate: rate,
+        egpAmount,
+      });
+    }
+
+    let empCommission = 0;
+    let amountAfterCommission = totalEGPAmount;
+
+    if (activity.name === "الحقايب") {
+      empCommission = totalEGPAmount * 0.1;
+      amountAfterCommission = totalEGPAmount - empCommission;
+    }
+
+    const empRev = await this.model.create({
+      activity: new Types.ObjectId(dto.activity),
+      employee: new Types.ObjectId(dto.employee),
+      currencies,
+      totalEGPAmount: amountAfterCommission,
+      date: dto.date ?? new Date(),
     });
+
+    await this.CommissionService.create({
+      amount: empCommission,
+      userId: empRev.employee.toString(),
+      date: empRev.date,
+    });
+
+    return empRev;
   }
-
-  let empCommission = 0;
-  let amountAfterCommission = totalEGPAmount;
-
-  if (activity.name === "الحقايب") {
-    empCommission = totalEGPAmount * 0.1;
-    amountAfterCommission = totalEGPAmount - empCommission;
-  }
-
-  const empRev = await this.model.create({
-    activity: new Types.ObjectId(dto.activity),
-    employee: new Types.ObjectId(dto.employee),
-    currencies,
-    totalEGPAmount: amountAfterCommission,
-    date: dto.date ?? new Date(),
-  });
-
-  await this.CommissionService.create({
-    amount: empCommission,
-    userId: empRev.employee.toString(),
-    date: empRev.date,
-  });
-
-  return empRev;
-}
 
 
   // ---------- FIND ALL ----------
   async findAll(month?: number, year?: number) {
-      const filter: any = {};
+    const filter: any = {};
 
-  if (month || year) {
-    const now = new Date();
+    if (month || year) {
+      const now = new Date();
 
-    const targetYear = year || now.getFullYear();
-    const targetMonth = month ? month - 1 : now.getMonth();
+      const targetYear = year || now.getFullYear();
+      const targetMonth = month ? month - 1 : now.getMonth();
 
-    const start = new Date(targetYear, targetMonth, 1);
-    const end = new Date(targetYear, targetMonth + 1, 1);
+      const start = new Date(targetYear, targetMonth, 1);
+      const end = new Date(targetYear, targetMonth + 1, 1);
 
-    filter.date = {
-      $gte: start,
-      $lt: end,
-    };
-  }
+      filter.date = {
+        $gte: start,
+        $lt: end,
+      };
+    }
     return this.model
       .find(filter)
       .sort({ createdAt: -1 })
@@ -166,52 +166,52 @@ export class EmpRevenueService {
   }
 
   // ---------- REPORT ----------
- async report(
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'range',
-  year?: number,
-  month?: number,
-  date?: string,
-  activity?: string,
-  currency?: string,
-  startDate?: string,   // used when period === 'range'
-  endDate?: string,     // used when period === 'range'
-) {
-  let start: Date;
-  let end: Date;
+  async report(
+    period: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'range',
+    year?: number,
+    month?: number,
+    date?: string,
+    activity?: string,
+    currency?: string,
+    startDate?: string,   
+    endDate?: string,     // used when period === 'range'
+  ) {
+    let start: Date;
+    let end: Date;
 
-  if (period === 'range') {
-    if (!startDate || !endDate) {
-      throw new BadRequestException(
-        'startDate and endDate are required when period is "range"',
-      );
+    if (period === 'range') {
+      if (!startDate || !endDate) {
+        throw new BadRequestException(
+          'startDate and endDate are required when period is "range"',
+        );
+      }
+      start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (start > end) {
+        throw new BadRequestException('startDate must be before endDate');
+      }
+    } else {
+      const parsedDate = date ? new Date(date) : undefined;
+      ({ start, end } = this.getDateRange(period, year, month, parsedDate));
     }
-    start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
 
-    if (start > end) {
-      throw new BadRequestException('startDate must be before endDate');
+    const match: Record<string, any> = {
+      date: { $gte: start, $lte: end },
+    };
+
+    if (activity) {
+      match.activity = new Types.ObjectId(activity);
     }
-  } else {
-    const parsedDate = date ? new Date(date) : undefined;
-    ({ start, end } = this.getDateRange(period, year, month, parsedDate));
-  }
 
-  const match: Record<string, any> = {
-    date: { $gte: start, $lte: end },
-  };
+    if (currency) {
+      match['currencies.currency'] = new Types.ObjectId(currency);
+    }
 
-  if (activity) {
-    match.activity = new Types.ObjectId(activity);
-  }
-
-  if (currency) {
-    match['currencies.currency'] = new Types.ObjectId(currency);
-  }
-
-  const revenueField = currency
-    ? {
+    const revenueField = currency
+      ? {
         $sum: {
           $reduce: {
             input: {
@@ -228,66 +228,66 @@ export class EmpRevenueService {
           },
         },
       }
-    : { $sum: '$totalEGPAmount' };
+      : { $sum: '$totalEGPAmount' };
 
-  const totalRevenue = await this.model.aggregate([
-    { $match: match },
-    {
-      $group: {
-        _id: null,
-        totalRevenue: revenueField,
+    const totalRevenue = await this.model.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: revenueField,
+        },
       },
-    },
-  ]);
+    ]);
 
-  const revenueByEmployee = await this.model.aggregate([
-    { $match: match },
-    {
-      $group: {
-        _id: '$employee',
-        total: revenueField,
+    const revenueByEmployee = await this.model.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: '$employee',
+          total: revenueField,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: 'employees',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'employee',
+      {
+        $lookup: {
+          from: 'employees',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'employee',
+        },
       },
-    },
-    { $unwind: '$employee' },
-    { $sort: { total: -1 } },
-  ]);
+      { $unwind: '$employee' },
+      { $sort: { total: -1 } },
+    ]);
 
-  const revenueByActivity = await this.model.aggregate([
-    { $match: match },
-    {
-      $group: {
-        _id: '$activity',
-        total: revenueField,
+    const revenueByActivity = await this.model.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: '$activity',
+          total: revenueField,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: 'activities',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'activity',
+      {
+        $lookup: {
+          from: 'activities',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'activity',
+        },
       },
-    },
-    { $unwind: '$activity' },
-    { $sort: { total: -1 } },
-  ]);
+      { $unwind: '$activity' },
+      { $sort: { total: -1 } },
+    ]);
 
-  return {
-    period,
-    dateRange: { start, end },
-    totalRevenue: totalRevenue[0]?.totalRevenue || 0,
-    revenueByEmployee,
-    revenueByActivity,
-  };
-}
+    return {
+      period,
+      dateRange: { start, end },
+      totalRevenue: totalRevenue[0]?.totalRevenue || 0,
+      revenueByEmployee,
+      revenueByActivity,
+    };
+  }
 
   // ---------- BY EMPLOYEE ----------
   async findByEmployee(employeeId: string, page = 1, limit = 20) {

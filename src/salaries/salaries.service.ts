@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   EmpRevenue,
   EmpRevenueDocument,
@@ -58,7 +58,7 @@ async calculateSalaries(dto?: { startDate?: string; endDate?: string }) {
   ]);
 
   const totalBagging = revenues
-    .filter((r) => r.activity?.name === 'الحقائب')
+    .filter((r) => r.activity?._id === new Types.ObjectId("69e02a5670bdd84d252e4dc9"))
     .reduce((sum, r) => {
       const total =
         typeof r.totalEGPAmount === 'number'
