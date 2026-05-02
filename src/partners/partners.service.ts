@@ -55,16 +55,27 @@ export class PartnerService {
   }
 
   createProfit(dto: CreatePartnerProfitDto) {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth()
     return this.partnerProfitModel.create({
       ...dto,
+      year:dto.year ? dto.year : currentYear,
+      month:dto.month ? dto.month:currentMonth,
       partner: new Types.ObjectId(dto.partner),
       activity: new Types.ObjectId(dto.activity),
     });
   }
 
-  findAllProfits() {
+  findAllProfits(month?: number, year?: number) {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    const query: any = {};
+
+    query.year = year ?? currentYear;
+    query.month = typeof month === 'number' ? month : currentMonth;
+
     return this.partnerProfitModel
-      .find()
+      .find(query)
       .populate('partner')
       .populate('activity');
   }

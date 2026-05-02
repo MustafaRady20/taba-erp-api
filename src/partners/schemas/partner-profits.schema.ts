@@ -14,6 +14,10 @@ export class PartnerProfit {
     @Prop({type:Number})
     month:number
 
+
+    @Prop({type:Number , default:new Date().getFullYear()})
+    year:number
+
     @Prop({type:Number,required:true})
     profit:number
     

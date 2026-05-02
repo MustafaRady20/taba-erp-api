@@ -13,6 +13,10 @@ export class CreatePartnerProfitDto {
   @IsOptional()
   @IsNumber()
   month?: number;
+
+   @IsOptional()
+  @IsNumber()
+  year?: number;
 }
 
 

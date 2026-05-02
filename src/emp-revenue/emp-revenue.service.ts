@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
@@ -67,7 +67,7 @@ export class EmpRevenueService {
   let empCommission = 0;
   let amountAfterCommission = totalEGPAmount;
 
-  if (activity.name === "الحقائب") {
+  if (activity.name === "الحقايب") {
     empCommission = totalEGPAmount * 0.1;
     amountAfterCommission = totalEGPAmount - empCommission;
   }
@@ -166,107 +166,128 @@ export class EmpRevenueService {
   }
 
   // ---------- REPORT ----------
-  async report(
-    period: 'daily' | 'weekly' | 'monthly' | 'yearly',
-    year?: number,
-    month?: number,
-    date?: string,
-    activity?: string,
-    currency?: string,
-  ) {
+ async report(
+  period: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'range',
+  year?: number,
+  month?: number,
+  date?: string,
+  activity?: string,
+  currency?: string,
+  startDate?: string,   // used when period === 'range'
+  endDate?: string,     // used when period === 'range'
+) {
+  let start: Date;
+  let end: Date;
+
+  if (period === 'range') {
+    if (!startDate || !endDate) {
+      throw new BadRequestException(
+        'startDate and endDate are required when period is "range"',
+      );
+    }
+    start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    if (start > end) {
+      throw new BadRequestException('startDate must be before endDate');
+    }
+  } else {
     const parsedDate = date ? new Date(date) : undefined;
-    const { start, end } = this.getDateRange(period, year, month, parsedDate);
+    ({ start, end } = this.getDateRange(period, year, month, parsedDate));
+  }
 
-    const match: Record<string, any> = {
-      date: { $gte: start, $lte: end },
-    };
+  const match: Record<string, any> = {
+    date: { $gte: start, $lte: end },
+  };
 
-    if (activity) {
-      match.activity = new Types.ObjectId(activity);
-    }
+  if (activity) {
+    match.activity = new Types.ObjectId(activity);
+  }
 
-    if (currency) {
-      match['currencies.currency'] = new Types.ObjectId(currency);
-    }
+  if (currency) {
+    match['currencies.currency'] = new Types.ObjectId(currency);
+  }
 
-    const revenueField = currency
-      ? {
-          $sum: {
-            $reduce: {
-              input: {
-                $filter: {
-                  input: '$currencies',
-                  as: 'c',
-                  cond: {
-                    $eq: ['$$c.currency', new Types.ObjectId(currency)],
-                  },
+  const revenueField = currency
+    ? {
+        $sum: {
+          $reduce: {
+            input: {
+              $filter: {
+                input: '$currencies',
+                as: 'c',
+                cond: {
+                  $eq: ['$$c.currency', new Types.ObjectId(currency)],
                 },
               },
-              initialValue: 0,
-              in: { $add: ['$$value', '$$this.egpAmount'] },
             },
+            initialValue: 0,
+            in: { $add: ['$$value', '$$this.egpAmount'] },
           },
-        }
-      : { $sum: '$totalEGPAmount' };
+        },
+      }
+    : { $sum: '$totalEGPAmount' };
 
-    const totalRevenue = await this.model.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: revenueField,
-        },
+  const totalRevenue = await this.model.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: revenueField,
       },
-    ]);
+    },
+  ]);
 
-    const revenueByEmployee = await this.model.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: '$employee',
-          total: revenueField,
-        },
+  const revenueByEmployee = await this.model.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: '$employee',
+        total: revenueField,
       },
-      {
-        $lookup: {
-          from: 'employees',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'employee',
-        },
+    },
+    {
+      $lookup: {
+        from: 'employees',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'employee',
       },
-      { $unwind: '$employee' },
-      { $sort: { total: -1 } },
-    ]);
+    },
+    { $unwind: '$employee' },
+    { $sort: { total: -1 } },
+  ]);
 
-    const revenueByActivity = await this.model.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: '$activity',
-          total: revenueField,
-        },
+  const revenueByActivity = await this.model.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: '$activity',
+        total: revenueField,
       },
-      {
-        $lookup: {
-          from: 'activities',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'activity',
-        },
+    },
+    {
+      $lookup: {
+        from: 'activities',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'activity',
       },
-      { $unwind: '$activity' },
-      { $sort: { total: -1 } },
-    ]);
+    },
+    { $unwind: '$activity' },
+    { $sort: { total: -1 } },
+  ]);
 
-    return {
-      period,
-      dateRange: { start, end },
-      totalRevenue: totalRevenue[0]?.totalRevenue || 0,
-      revenueByEmployee,
-      revenueByActivity,
-    };
-  }
+  return {
+    period,
+    dateRange: { start, end },
+    totalRevenue: totalRevenue[0]?.totalRevenue || 0,
+    revenueByEmployee,
+    revenueByActivity,
+  };
+}
 
   // ---------- BY EMPLOYEE ----------
   async findByEmployee(employeeId: string, page = 1, limit = 20) {

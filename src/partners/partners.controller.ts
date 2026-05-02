@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Patch, Delete, Query } from '@nestjs/common';
 import { PartnerService } from './partners.service';
 import { CreatePartnerDto, UpdatePartnerDto } from './dto/partners.dto';
 import { CreatePartnerProfitDto, UpdatePartnerProfitDto } from './dto/partner-profit.dto';
@@ -42,8 +42,8 @@ export class PartnerController {
   }
 
   @Get('profits/all')
-  findAllProfits() {
-    return this.partnerService.findAllProfits();
+  findAllProfits(@Query("year") year:string,@Query("month") month:string) {
+    return this.partnerService.findAllProfits(month?Number(month):undefined,year?Number(year):undefined);
   }
 
   @Get(':id/profits')
