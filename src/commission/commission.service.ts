@@ -18,7 +18,7 @@ export class CommissionService {
     return created.save();
   }
 
- async findAll(month?: number, year?: number): Promise<Commission[]> {
+async findAll(month?: number, year?: number): Promise<any> {
   const filter: any = {};
 
   if (month || year) {
@@ -36,9 +36,44 @@ export class CommissionService {
     };
   }
 
-  return this.commissionModel
-    .find(filter)
-    .sort({ createdAt: -1 });
+  const comm = await this.commissionModel.aggregate([
+    {
+      $match: filter,
+    },
+    {
+      $group: {
+       _id: { $toObjectId: "$userId" },
+        totalAmount: { $sum: "$amount" },
+      },
+    },
+    {
+      $lookup: {
+        from: "employees", // ✅ مهم جدًا
+        localField: "_id",
+        foreignField: "_id",
+        as: "employee",
+      },
+    },
+    {
+      $unwind: {
+        path: "$employee",
+        preserveNullAndEmptyArrays: true, // عشان لو مفيش user
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        userId: "$_id",
+        name: "$employee.name",
+        totalAmount: 1,
+      },
+    },
+    {
+      $sort: { totalAmount: -1 },
+    },
+  ]);
+
+  return comm;
 }
   async getMonthlyTotalPerUser(
   userId: string,

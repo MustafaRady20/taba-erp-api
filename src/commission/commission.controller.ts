@@ -22,7 +22,6 @@ import { CreateCommissionDto, UpdateCommissionDto } from './dto/commission.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Commissions')
-@UseGuards(AuthGuard("jwt"))
 @Controller('commissions')
 export class CommissionController {
     constructor(private readonly service: CommissionService) { }
@@ -36,8 +35,8 @@ export class CommissionController {
 
     @Get()
     @ApiOperation({ summary: 'Get all commission' })
-    findAll() {
-        return this.service.findAll();
+    findAll(@Query("month") month?: string,@Query("year")  year?: string) {
+        return this.service.findAll(month? Number(month):undefined, year? Number(year):undefined);
     }
     @Get('user/:userId/monthly-total')
     @ApiOperation({ summary: 'Get total commission for a user by month' })

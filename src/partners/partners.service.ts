@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Partner, PartnerDocument } from './schemas/partner.schema';
 import {
   PartnerProfit,
@@ -66,20 +66,18 @@ export class PartnerService {
     });
   }
 
-  findAllProfits(month?: number, year?: number) {
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth();
-    const query: any = {};
+ findAllProfits(month?: number, year?: number) {
+  const query: FilterQuery<PartnerProfit> = {};
 
-    query.year = year ?? currentYear;
-    query.month = typeof month === 'number' ? month : currentMonth;
+  if (typeof year === 'number') query.year = year;
+  if (typeof month === 'number') query.month = month;
 
-    return this.partnerProfitModel
-      .find(query)
-      .populate('partner')
-      .populate('activity');
-  }
-
+  return this.partnerProfitModel
+    .find(query)
+    .populate('partner')
+    .populate('activity')
+    .sort({ year: -1, month: -1 }); // newest first
+}
   findPartnerProfits(partnerId: string) {
     return this.partnerProfitModel
       .find({ partner: new Types.ObjectId(partnerId) })

@@ -5,7 +5,7 @@ import { CreatePartnerProfitDto, UpdatePartnerProfitDto } from './dto/partner-pr
 
 @Controller('partners')
 export class PartnerController {
-  constructor(private readonly partnerService: PartnerService) {}
+  constructor(private readonly partnerService: PartnerService) { }
 
 
   @Post()
@@ -23,7 +23,7 @@ export class PartnerController {
     return this.partnerService.findPartnerById(id);
   }
 
-   @Patch(':id')
+  @Patch(':id')
   updatePartner(
     @Param('id') id: string,
     @Body() dto: UpdatePartnerDto,
@@ -42,8 +42,9 @@ export class PartnerController {
   }
 
   @Get('profits/all')
-  findAllProfits(@Query("year") year:string,@Query("month") month:string) {
-    return this.partnerService.findAllProfits(month?Number(month):undefined,year?Number(year):undefined);
+  findAllProfits(@Query('year') year?: string,
+    @Query('month') month?: string,) {
+    return this.partnerService.findAllProfits(month ? Number(month) : undefined, year ? Number(year) : undefined);
   }
 
   @Get(':id/profits')
@@ -56,7 +57,7 @@ export class PartnerController {
     return this.partnerService.getPartnerTotalProfit(id);
   }
 
-   @Patch('profits/:id')
+  @Patch('profits/:id')
   updateProfit(
     @Param('id') id: string,
     @Body() dto: UpdatePartnerProfitDto,

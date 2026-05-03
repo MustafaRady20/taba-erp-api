@@ -56,9 +56,9 @@ async calculateSalaries(dto?: { startDate?: string; endDate?: string }) {
     },
     { $unwind: '$activity' },
   ]);
-
+console.log(revenues)
   const totalBagging = revenues
-    .filter((r) => r.activity?._id === new Types.ObjectId("69e02a5670bdd84d252e4dc9"))
+    .filter((r) => r.activity?._id,toString() === "69e02a5670bdd84d252e4dc9")
     .reduce((sum, r) => {
       const total =
         typeof r.totalEGPAmount === 'number'
