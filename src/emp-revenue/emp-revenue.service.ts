@@ -67,7 +67,7 @@ export class EmpRevenueService {
     let empCommission = 0;
     let amountAfterCommission = totalEGPAmount;
 
-    if (activity.name === "الحقايب") {
+    if (activity.name === "نشاط حمل الحقائب") {
       empCommission = totalEGPAmount * 0.1;
       amountAfterCommission = totalEGPAmount - empCommission;
     }
