@@ -68,7 +68,8 @@ export class EmpRevenueService {
     let amountAfterCommission = totalEGPAmount;
 
     if (activity.name === "نشاط حمل الحقائب") {
-      empCommission = totalEGPAmount * 0.1;
+      const thousands = Math.floor(totalEGPAmount / 1000); 
+      empCommission = thousands * 100;
       amountAfterCommission = totalEGPAmount - empCommission;
     }
 
@@ -173,7 +174,7 @@ export class EmpRevenueService {
     date?: string,
     activity?: string,
     currency?: string,
-    startDate?: string,   
+    startDate?: string,
     endDate?: string,     // used when period === 'range'
   ) {
     let start: Date;
