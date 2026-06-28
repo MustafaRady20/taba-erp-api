@@ -1,11 +1,14 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Attendance, AttendanceDocument } from './schema/attendance.schema';
 import { Employees, EmployeesDocument } from 'src/employees/schema/employee.schema';
 
 @Injectable()
 export class AttendanceService {
+  private readonly logger = new Logger(AttendanceService.name);
+
   private readonly allowedLocation = {
     lat: 29.49119758605957,
     lng: 34.90092849731445,
@@ -197,5 +200,29 @@ async getAttendanceByDate(date: string, name?: string) {
       checkOutTime: record.checkOutTime,
       totalHours: record.totalHours,
     }));
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async autoCheckoutStaleAttendance() {
+    const threshold = new Date(Date.now() - 20 * 60 * 60 * 1000);
+
+    const staleRecords = await this.attendanceModel.find({
+      checkOutTime: { $exists: false },
+      checkInTime: { $lte: threshold },
+    });
+
+    if (staleRecords.length === 0) return;
+
+    const now = new Date();
+
+    for (const record of staleRecords) {
+      const totalHours = (now.getTime() - record.checkInTime.getTime()) / (1000 * 60 * 60);
+      record.checkOutTime = now;
+      record.checkOutLocation = 'auto-checkout';
+      record.totalHours = parseFloat(totalHours.toFixed(2));
+      await record.save();
+    }
+
+    this.logger.log(`Auto-checked out ${staleRecords.length} stale attendance record(s).`);
   }
 }
