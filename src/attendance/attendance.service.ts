@@ -202,27 +202,38 @@ async getAttendanceByDate(date: string, name?: string) {
     }));
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async autoCheckoutStaleAttendance() {
+    this.logger.log('Auto-checkout cron triggered.');
+
     const threshold = new Date(Date.now() - 20 * 60 * 60 * 1000);
 
     const staleRecords = await this.attendanceModel.find({
-      checkOutTime: { $exists: false },
+      $or: [{ checkOutTime: { $exists: false } }, { checkOutTime: null }],
       checkInTime: { $lte: threshold },
     });
 
-    if (staleRecords.length === 0) return;
-
-    const now = new Date();
-
-    for (const record of staleRecords) {
-      const totalHours = (now.getTime() - record.checkInTime.getTime()) / (1000 * 60 * 60);
-      record.checkOutTime = now;
-      record.checkOutLocation = 'auto-checkout';
-      record.totalHours = parseFloat(totalHours.toFixed(2));
-      await record.save();
+    if (staleRecords.length === 0) {
+      this.logger.log('No stale attendance records found.');
+      return;
     }
 
-    this.logger.log(`Auto-checked out ${staleRecords.length} stale attendance record(s).`);
+    const now = new Date();
+    let processed = 0;
+
+    for (const record of staleRecords) {
+      try {
+        const totalHours = (now.getTime() - record.checkInTime.getTime()) / (1000 * 60 * 60);
+        record.checkOutTime = now;
+        record.checkOutLocation = 'auto-checkout';
+        record.totalHours = parseFloat(totalHours.toFixed(2));
+        await record.save();
+        processed++;
+      } catch (err) {
+        this.logger.error(`Failed to auto-checkout record ${record._id}: ${err.message}`);
+      }
+    }
+
+    this.logger.log(`Auto-checked out ${processed}/${staleRecords.length} stale attendance record(s).`);
   }
 }
