@@ -225,7 +225,7 @@ export class EmpRevenueService {
               },
             },
             initialValue: 0,
-            in: { $add: ['$$value', '$$this.egpAmount'] },
+            in: { $add: ['$$value', '$$this.amount'] },
           },
         },
       }
