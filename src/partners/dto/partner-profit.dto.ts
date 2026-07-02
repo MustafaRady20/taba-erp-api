@@ -14,9 +14,13 @@ export class CreatePartnerProfitDto {
   @IsNumber()
   month?: number;
 
-   @IsOptional()
+  @IsOptional()
   @IsNumber()
   year?: number;
+
+  @IsOptional()
+  @IsNumber()
+  numberOfDays?: number;
 }
 
 
@@ -36,5 +40,9 @@ export class UpdatePartnerProfitDto {
   @IsOptional()
   @IsNumber()
   month?: number;
+
+  @IsOptional()
+  @IsNumber()
+  numberOfDays?: number;
 }
 

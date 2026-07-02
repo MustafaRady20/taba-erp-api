@@ -20,7 +20,10 @@ export class PartnerProfit {
 
     @Prop({type:Number,required:true})
     profit:number
-    
+
+    @Prop({type:Number, required:false})
+    numberOfDays?: number
+
 }
 
 
